@@ -4,6 +4,8 @@ import (
 	"context"
 	"log/slog"
 	"time"
+
+	"github.com/mi4r/currency-service/currency/internal/metrics"
 )
 
 // Worker handles periodic currency rate fetching.
@@ -115,14 +117,23 @@ func (w *Worker) fetchWithRetry(ctx context.Context) {
 func (w *Worker) fetch(ctx context.Context) error {
 	w.logger.Info("fetching currency rates")
 
+	start := time.Now()
+
 	rates, err := w.fetcher.FetchAllRates(ctx)
 	if err != nil {
+		metrics.WorkerFetchTotal.WithLabelValues("error").Inc()
+		metrics.WorkerFetchDuration.Observe(time.Since(start).Seconds())
 		return err
 	}
 
 	if err := w.repo.SaveBatch(ctx, rates); err != nil {
+		metrics.WorkerFetchTotal.WithLabelValues("error").Inc()
+		metrics.WorkerFetchDuration.Observe(time.Since(start).Seconds())
 		return err
 	}
+
+	metrics.WorkerFetchTotal.WithLabelValues("success").Inc()
+	metrics.WorkerFetchDuration.Observe(time.Since(start).Seconds())
 
 	w.logger.Info("currency rates fetched and saved",
 		slog.Int("count", len(rates)),
@@ -182,6 +193,7 @@ func (w *Worker) backfill(ctx context.Context) {
 
 		rates, err := w.fetcher.FetchHistoricalRates(ctx, w.historicalAPIURL, date)
 		if err != nil {
+			metrics.WorkerBackfillTotal.WithLabelValues("error").Inc()
 			w.logger.Warn("backfill: failed to fetch rates",
 				slog.String("date", dateStr),
 				slog.String("error", err.Error()),
@@ -190,6 +202,7 @@ func (w *Worker) backfill(ctx context.Context) {
 		}
 
 		if err := w.repo.SaveBatch(ctx, rates); err != nil {
+			metrics.WorkerBackfillTotal.WithLabelValues("error").Inc()
 			w.logger.Warn("backfill: failed to save rates",
 				slog.String("date", dateStr),
 				slog.String("error", err.Error()),
@@ -197,6 +210,7 @@ func (w *Worker) backfill(ctx context.Context) {
 			continue
 		}
 
+		metrics.WorkerBackfillTotal.WithLabelValues("success").Inc()
 		w.logger.Info("backfill: saved rates",
 			slog.String("date", dateStr),
 			slog.Int("count", len(rates)),
