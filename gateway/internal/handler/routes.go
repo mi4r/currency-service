@@ -36,7 +36,7 @@ func RegisterRoutes(
 
 		// Protected routes
 		r.Group(func(r chi.Router) {
-			// r.Use(middleware.Auth(jwtManager))
+			r.Use(middleware.Auth(jwtManager))
 
 			r.Get("/rates", currencyHandler.GetAllRates)
 			r.Get("/rates/{currency}", currencyHandler.GetRate)

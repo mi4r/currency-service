@@ -27,6 +27,11 @@ func (m *MockRateRepository) SaveBatch(ctx context.Context, rates []*domain.Curr
 	return args.Error(0)
 }
 
+func (m *MockRateRepository) GetExistingDates(ctx context.Context, from, to time.Time) ([]time.Time, error) {
+	args := m.Called(ctx, from, to)
+	return args.Get(0).([]time.Time), args.Error(1)
+}
+
 func newTestLogger() *slog.Logger {
 	return slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelError}))
 }
@@ -59,7 +64,7 @@ func TestWorker_FetchNow(t *testing.T) {
 			tt.setupMock(mockRepo)
 
 			fetcher := NewFetcher("https://latest.currency-api.pages.dev/v1/currencies/rub.json")
-			w := NewWorker(fetcher, mockRepo, newTestLogger(), 24*time.Hour, 1, 1*time.Second)
+			w := NewWorker(fetcher, mockRepo, newTestLogger(), 24*time.Hour, 1, 1*time.Second, "", 0)
 
 			err := w.FetchNow(context.Background())
 
@@ -79,7 +84,7 @@ func TestWorker_StartAndStop(t *testing.T) {
 	mockRepo.On("SaveBatch", mock.Anything, mock.AnythingOfType("[]*domain.CurrencyRate")).Return(nil).Maybe()
 
 	fetcher := NewFetcher("https://latest.currency-api.pages.dev/v1/currencies/rub.json")
-	w := NewWorker(fetcher, mockRepo, newTestLogger(), 1*time.Hour, 1, 1*time.Second)
+	w := NewWorker(fetcher, mockRepo, newTestLogger(), 1*time.Hour, 1, 1*time.Second, "", 0)
 
 	ctx, cancel := context.WithCancel(context.Background())
 

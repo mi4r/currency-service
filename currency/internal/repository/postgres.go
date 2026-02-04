@@ -80,6 +80,37 @@ func (r *PostgresRepository) SaveBatch(ctx context.Context, rates []*domain.Curr
 	return nil
 }
 
+// GetExistingDates returns distinct dates that have rate data in the given range.
+func (r *PostgresRepository) GetExistingDates(ctx context.Context, from, to time.Time) ([]time.Time, error) {
+	query := `
+		SELECT DISTINCT rate_date
+		FROM currency_rates
+		WHERE rate_date >= $1 AND rate_date <= $2
+		ORDER BY rate_date ASC
+	`
+
+	rows, err := r.pool.Query(ctx, query, from, to)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query existing dates: %w", err)
+	}
+	defer rows.Close()
+
+	var dates []time.Time
+	for rows.Next() {
+		var date time.Time
+		if err := rows.Scan(&date); err != nil {
+			return nil, fmt.Errorf("failed to scan date: %w", err)
+		}
+		dates = append(dates, date)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating dates: %w", err)
+	}
+
+	return dates, nil
+}
+
 // GetByDate retrieves a rate for a specific currency and date.
 func (r *PostgresRepository) GetByDate(ctx context.Context, targetCurrency string, date time.Time) (*domain.CurrencyRate, error) {
 	query := `

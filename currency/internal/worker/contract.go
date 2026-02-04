@@ -2,6 +2,7 @@ package worker
 
 import (
 	"context"
+	"time"
 
 	"github.com/mi4r/currency-service/currency/internal/domain"
 )
@@ -14,4 +15,7 @@ type RateRepository interface {
 
 	// SaveBatch saves multiple currency rates in a single transaction.
 	SaveBatch(ctx context.Context, rates []*domain.CurrencyRate) error
+
+	// GetExistingDates returns dates that already have rate data in the given range.
+	GetExistingDates(ctx context.Context, from, to time.Time) ([]time.Time, error)
 }

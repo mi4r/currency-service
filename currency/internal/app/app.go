@@ -84,6 +84,8 @@ func (a *App) Run() error {
 		a.cfg.Worker.FetchInterval,
 		a.cfg.Worker.RetryAttempts,
 		a.cfg.Worker.RetryDelay,
+		a.cfg.Worker.HistoricalAPIURL,
+		a.cfg.Worker.BackfillDays,
 	)
 
 	// Start worker in background

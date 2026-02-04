@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/mi4r/currency-service/currency/internal/domain"
@@ -87,6 +88,49 @@ func (f *Fetcher) FetchAllRates(ctx context.Context) ([]*domain.CurrencyRate, er
 	apiResp, err := f.Fetch(ctx)
 	if err != nil {
 		return nil, err
+	}
+
+	rateDate, err := time.Parse("2006-01-02", apiResp.Date)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse date: %w", err)
+	}
+
+	rates := make([]*domain.CurrencyRate, 0, len(apiResp.RUB))
+	for currency, rate := range apiResp.RUB {
+		rates = append(rates, &domain.CurrencyRate{
+			RateDate:       rateDate,
+			BaseCurrency:   "RUB",
+			TargetCurrency: currency,
+			Rate:           rate,
+		})
+	}
+
+	return rates, nil
+}
+
+// FetchHistoricalRates retrieves currency rates for a specific historical date.
+func (f *Fetcher) FetchHistoricalRates(ctx context.Context, historicalURLTemplate string, date time.Time) ([]*domain.CurrencyRate, error) {
+	dateStr := date.Format("2006-01-02")
+	apiURL := strings.Replace(historicalURLTemplate, "{date}", dateStr, 1)
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, apiURL, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	resp, err := f.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch historical rates for %s: %w", dateStr, err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unexpected status code %d for date %s", resp.StatusCode, dateStr)
+	}
+
+	var apiResp APIResponse
+	if err := json.NewDecoder(resp.Body).Decode(&apiResp); err != nil {
+		return nil, fmt.Errorf("failed to decode response for %s: %w", dateStr, err)
 	}
 
 	rateDate, err := time.Parse("2006-01-02", apiResp.Date)

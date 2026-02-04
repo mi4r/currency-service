@@ -37,11 +37,13 @@ type DatabaseConfig struct {
 
 // WorkerConfig holds worker configuration.
 type WorkerConfig struct {
-	FetchInterval  time.Duration `env:"WORKER_FETCH_INTERVAL" envDefault:"24h"`
-	APIURL         string        `env:"WORKER_API_URL" envDefault:"https://latest.currency-api.pages.dev/v1/currencies/rub.json"`
-	TargetCurrency string        `env:"WORKER_TARGET_CURRENCY" envDefault:"usd"`
-	RetryAttempts  int           `env:"WORKER_RETRY_ATTEMPTS" envDefault:"3"`
-	RetryDelay     time.Duration `env:"WORKER_RETRY_DELAY" envDefault:"5m"`
+	FetchInterval    time.Duration `env:"WORKER_FETCH_INTERVAL" envDefault:"1h"`
+	APIURL           string        `env:"WORKER_API_URL" envDefault:"https://latest.currency-api.pages.dev/v1/currencies/rub.json"`
+	TargetCurrency   string        `env:"WORKER_TARGET_CURRENCY" envDefault:"usd"`
+	RetryAttempts    int           `env:"WORKER_RETRY_ATTEMPTS" envDefault:"3"`
+	RetryDelay       time.Duration `env:"WORKER_RETRY_DELAY" envDefault:"5m"`
+	HistoricalAPIURL string        `env:"WORKER_HISTORICAL_API_URL" envDefault:"https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@{date}/v1/currencies/rub.json"`
+	BackfillDays     int           `env:"WORKER_BACKFILL_DAYS" envDefault:"30"`
 }
 
 // LogConfig holds logging configuration.
