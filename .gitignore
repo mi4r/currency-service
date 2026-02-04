@@ -1,0 +1,39 @@
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+/currency/cmd/currency/currency
+/gateway/cmd/gateway/gateway
+
+# Test binary
+*.test
+
+# Output of the go coverage tool
+*.out
+
+# Dependency directories
+vendor/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Environment files
+.env
+.env.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build output
+/bin/
+/dist/
+
+# Temporary files
+tmp/
+*.tmp
