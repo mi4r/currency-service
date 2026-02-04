@@ -52,7 +52,9 @@ func (r *PostgresRepository) SaveBatch(ctx context.Context, rates []*domain.Curr
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer func() {
+		_ = tx.Rollback(ctx)
+	}()
 
 	query := `
 		INSERT INTO currency_rates (rate_date, base_currency, target_currency, rate)

@@ -44,7 +44,9 @@ func (f *Fetcher) Fetch(ctx context.Context) (*APIResponse, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch rates: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
@@ -122,7 +124,9 @@ func (f *Fetcher) FetchHistoricalRates(ctx context.Context, historicalURLTemplat
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch historical rates for %s: %w", dateStr, err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("unexpected status code %d for date %s", resp.StatusCode, dateStr)
